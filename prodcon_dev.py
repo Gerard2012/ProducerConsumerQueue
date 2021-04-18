@@ -7,30 +7,41 @@ import time
 
 def producer(pipeline):
     """Pretend we're getting a message from the network."""
+
     for index, iteration in enumerate(range(10)):
         obj = random.randint(1, 101)
         logging.info("Producer %s: produced object %s", index, obj)
+        logging.debug("Producer %s: about to acquire lock", index)
+        pipeline._lock.acquire()
         pipeline.shift(obj, "Producer", index)
+        logging.info("Producer %s: added object %s to queue", index, obj)
+        pipeline._lock.release()
+        logging.debug("Producer %s: released lock", index)
         time.sleep(1)
         logging.info("Producer %s: complete", index)
 
-    # Send a sentinel message to tell consumer we're done
-    pipeline.shift("END", "Producer", "FINAL")
+
 
 
 def consumer(pipeline):
     """Pretend we're saving a number in the database."""
-    obj = 0
+
     index = 0
-    while obj is not "END":
+    pipeline._lock.acquire()
+
+    if pipeline.count() == 0:
+        index += 1
+        pipeline._lock.release()
+        time.sleep(5)
         logging.info("Consumer %s: about to check queue for next object", index)
-        obj = pipeline.unshift("Consumer", index)
-        if obj is not "END":
-            time.sleep(5)
-            logging.info("Consumer %s: consumed object %s", index, obj)
-            index += 1
+        # logging.debug("Consumer %s: about to acquire lock", index)
+
     else:
-        logging.info("Consumer %s: complete, %s", index, obj)
+        obj = pipeline.unshift("Consumer", index)
+        pipeline._lock.release()
+        time.sleep(5)
+        logging.info("Consumer %s: consumed object %s", index, obj)
+        index += 1
 
 
 if __name__ == "__main__":

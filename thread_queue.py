@@ -20,9 +20,6 @@ class Queue(object):
     def __init__(self):
         self.front = None
         self.back = None
-        # self.producer_lock = threading.Lock()
-        # self.consumer_lock = threading.Lock()
-        # self.consumer_lock.acquire()
         self._lock = threading.Lock()
 
 
@@ -30,35 +27,19 @@ class Queue(object):
 
         # Apends a new value to the end of the queue.
 
-        logging.debug("%s %s: entered shift()", name, index)
-        logging.debug("%s %s: about to acquire the lock", name, index)
-        # self.producer_lock.acquire()
-        self._lock.acquire()
-        logging.debug("%s %s: has the lock", name, index)
-
         new_elem = QueueNode(obj, None, None)
-        logging.debug("%s %s: shift() QueueNode(%s) created", name, index, obj)
+        logging.debug("%s %s: shift() QueueNode(%s) created", name, index, new_elem)
 
         logging.debug("%s %s: QUEUE STATUS -- FRONT: %s, BACK: %s", name, index, self.front, self.back)
 
         if self.front == None and self.back == None:
-            logging.debug("%s %s: entered shift() IF", name, index)
             self.front = new_elem
             self.back = self.front
-            logging.debug("%s %s: completed shift() IF", name, index)
 
         else:
-            logging.debug("%s %s: entered shift() ELSE", name, index)
             self.back.nxt = new_elem
             new_elem.prev = self.back
             self.back = new_elem
-            logging.debug("%s %s: completed shift() ELSE", name, index)
-
-        logging.debug("%s %s: queued object %s", name, index, obj)
-        logging.debug("%s %s: about to release the lock", name, index)
-        # self.consumer_lock.release()
-        self._lock.release()
-        logging.debug("%s %s: released the lock", name, index)
 
 
     def count(self):
@@ -83,20 +64,11 @@ class Queue(object):
 
         # Removes the item from the front of the queue and returns it.
 
-        logging.debug("%s %s: about to acquire the lock", name, index)
-        # self.consumer_lock.acquire()
-        self._lock.acquire()
-        logging.debug("%s %s: has the lock", name, index)
-
         logging.debug("%s %s: QUEUE STATUS -- FRONT: %s, BACK: %s", name, index, self.front, self.back)
 
         if not self.front:
 
             logging.debug("%s %s: retrieved no object from queue", name, index)
-            logging.debug("%s %s: about to release the lock", name, index)
-            # self.producer_lock.release()
-            self._lock.release()
-            logging.debug("%s %s: released the lock", name, index)
 
             return None
 
@@ -106,10 +78,6 @@ class Queue(object):
             self.back = None
 
             logging.debug("%s %s: retrieved %s from queue", name, index, n.value)
-            logging.debug("%s %s: about to release the lock", name, index)
-            # self.producer_lock.release()
-            self._lock.release()
-            logging.debug("%s %s: released the lock", name, index)
 
             return n.value
 
@@ -120,10 +88,6 @@ class Queue(object):
             self.front = new_front
 
             logging.debug("%s %s: retrieved %s from queue", name, index, n.value)
-            logging.debug("%s %s: about to release the lock", name, index)
-            # self.producer_lock.release()
-            self._lock.release()
-            logging.debug("%s %s: released the lock", name, index)
 
             return n.value
 
