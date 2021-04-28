@@ -6,6 +6,7 @@ import time
 
 
 def producer(pipeline):
+
     """Pretend we're getting a message from the network."""
 
     for index, iteration in enumerate(range(10)):
@@ -22,26 +23,25 @@ def producer(pipeline):
 
 
 
+def consumer(pipeline, index=0):
 
-def consumer(pipeline):
     """Pretend we're saving a number in the database."""
 
-    index = 0
     pipeline._lock.acquire()
 
-    if pipeline.count() == 0:
-        index += 1
-        pipeline._lock.release()
-        time.sleep(5)
+    while pipeline.count() != 0:
         logging.info("Consumer %s: about to check queue for next object", index)
-        # logging.debug("Consumer %s: about to acquire lock", index)
-
-    else:
         obj = pipeline.unshift("Consumer", index)
         pipeline._lock.release()
+        index += 1
         time.sleep(5)
         logging.info("Consumer %s: consumed object %s", index, obj)
-        index += 1
+
+        consumer(pipeline, index)
+
+    else:
+        logging.info("Consumer: pipeline is empty")
+        pipeline._lock.release()
 
 
 if __name__ == "__main__":
